@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avocado OS</title>
+    <style>
+        /* System-Wide Setup */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #2c4c1e;
+        }
+        /* The Desktop Background */
+        #desktop {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #557a46 0%, #2c4c1e 100%);
+            position: relative;
+            padding-top: 40px;
+        }
+        /* Top Status Bar */
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: rgba(26, 43, 19, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: #e8f5e9;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(194, 241, 163, 0.2);
+        }
+        .system-menu {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #clock {
+            font-variant-numeric: tabular-nums;
+        }
+        /* Desktop App Shortcut Grid */
+        .desktop-shortcuts {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .shortcut {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+        .shortcut-icon {
+            font-size: 40px;
+            margin-bottom: 5px;
+            transition: transform 0.1s;
+        }
+        .shortcut:hover .shortcut-icon {
+            transform: scale(1.1);
+        }
+        /* Interactive Window Container */
+        .window {
+            position: absolute;
+            top: 12%;
+            left: 15%;
+            width: 70%;
+            height: 75%;
+            background-color: #e1d5e7; /* Your custom light purple color */
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #bad6ad;
+            z-index: 10;
+        }
+        /* Window Top Header Bar */
+        .window-header {
+            height: 38px;
+            background-color: #daebd0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            cursor: move;
+            border-bottom: 1px solid #bad6ad;
+        }
+        .window-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c4c1e;
+        }
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        .control-btn {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-close {
+            background-color: #ff5f56;
+        }
+        /* Window App Content */
+        .window-body {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+            color: #000000;
+            user-select: text; /* Lets users highlight text */
+        }
+        /* Your Custom Inner Layout Styling */
+        .window-body h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        .window-body h2 {
+            font-size: 20px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .window-body p {
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .image-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .image-box {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            max-width: 300px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .image-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        /* Drawing App Specific Custom Layouts */
+        .paint-toolbar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background-color: #daebd0;
+            padding: 10px;
+            border-bottom: 1px solid #bad6ad;
+        }
+        .paint-toolbar label {
+            font-size: 14px;
+            color: #2c4c1e;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .paint-btn {
+            background-color: #2c4c1e;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .paint-btn:hover {
+            background-color: #557a46;
+        }
+        #paint-canvas {
+            background-color: #ffffff;
+            cursor: crosshair;
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="desktop">
+    <!-- Top Menu Bar -->
+    <div id="top-bar">
+        <div class="system-menu">
+            <span>🥑</span> <strong>Avocado OS</strong>
+        </div>
+        <div id="clock">00:00:00 AM</div>
+    </div>
+
+    <!-- Desktop Grid Shortcuts -->
+    <div class="desktop-shortcuts">
+        <div class="shortcut" onclick="openWindow('intro-window')">
+            <div class="shortcut-icon">ℹ️</div>
+            <div class="shortcut-label">About Me</div>
+        </div>
+        <div class="shortcut" onclick="openWindow('paint-window')">
+            <div class="shortcut-icon">🎨</div>
+            <div class="shortcut-label">Doodles...</div>
+        </div>
+    </div>
+
+    <!-- App Window: About Me -->
+    <div id="intro-window" class="window">
+        <div class="window-header" id="intro-window-header">
+            <div class="window-title">📁 Welcome to Avocado OS</div>
+            <div class="window-controls">
+                <button class="control-btn btn-close" onclick="closeWindow('intro-window')"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <h1>Welcome to Avocado OS</h1>
+            <h2>Introduction</h2>
+            <p>Hello People! I'm AK, a teenager that loves medical/computer science :)</p>
+            <p>(Here's two pictures of my favorite animals)</p>
+            <div class="image-container">
+                <div class="image-box">
+                    <p><strong>Cats:</strong> descended from the most ferocious killing machines on the planet.<br><strong>Also cats:</strong></p>
+                    <img src="AKKKKKKKK.jpeg" alt="Funny Cat">
+                </div>
+                <div class="image-box">
+                    <p><strong>Haku Dragon</strong> (Spirited Away)</p>
+                    <img src="dragonImage.jpeg" alt="Haku Dragon">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Window: Paint Studio -->
+    <div id="paint-window" class="window" style="display: none;">
+        <div class="window-header" id="paint-window-header">
+            <div class="window-title">Draw Whatever</div>
+            <div class="window-controls">
+                <button class="control-btn btn-close" onclick="closeWindow('paint-window')"></button>
+            </div>
+        </div>
+        <!-- Canvas Toolbar -->
+        <div class="paint-toolbar">
+            <label>🎨 Color: <input type="color" id="brush-color" value="#2c4c1e"></label>
+            <label>✏️ Size: <input type="range" id="brush-size" min="1" max="25" value="5"></label>
+            <button class="paint-btn" onclick="clearCanvas()">🗑️ Clear Canvas</button>
+        </div>
+        <!-- Responsive Painting Area -->
+        <div style="flex-grow: 1; position: relative; overflow: hidden; display: flex;">
+            <canvas id="paint-canvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+/* Real-time System Clock */
+function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    document.getElementById('clock').textContent = `${String(hours).padStart(2,'0')}:${minutes}:${seconds} ${ampm}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* Window Action System togglers */
+function openWindow(id) {
+    const targetWin = document.getElementById(id);
+    if (targetWin) {
+        targetWin.style.display = 'flex';
+        bringToFront(targetWin);
+        // Special internal sizing setup required for rendering structural paint engine viewports
+        if (id === 'paint-window') {
+            setTimeout(initCanvasResolution, 50);
+        }
+    }
+}
+
+function closeWindow(id) {
+    const targetWin = document.getElementById(id);
+    if (targetWin) targetWin.style.display = 'none';
+}
+
+/* Layer Sorting Engine (Z-Index Controller) */
+let highestZ = 10;
+function bringToFront(elmnt) {
+    highestZ++;
+    elmnt.style.zIndex = highestZ;
+}
+
+/* Simple JavaScript Window Dragger */
+function dragElement(elmnt) {
+    if (!elmnt) return;
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    const header = document.getElementById(elmnt.id + "-header");
+
+    if (header) {
+        header.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        bringToFront(elmnt);
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        let targetTop = elmnt.offsetTop - pos2;
+        if (targetTop < 40) targetTop = 40; // Protect top bar overlay
+        elmnt.style.top = targetTop + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+// Initialize drag listeners on system windows
+dragElement(document.getElementById("intro-window"));
+dragElement(document.getElementById("paint-window"));
+
+/* Paint App Engine Code */
+const canvas = document.getElementById('paint-canvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+let isDrawing = false;
+
+// Matches internal pixel dimensions to the actual screen container size
+function initCanvasResolution() {
+    if (!canvas || !ctx) return;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    // Restore properties after changing resolution bounds
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+}
+
+// Capture dynamic configurations
+const getBrushColor = () => document.getElementById('brush-color')?.value || '#000000';
+const getBrushSize = () => document.getElementById('brush-size')?.value || 5;
+
+function startDrawing(e) {
+    if (!ctx) return;
+    isDrawing = true;
+    ctx.beginPath();
+    // Find click coordinates relative to canvas positioning context
+    const rect = canvas.getBoundingClientRect();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    draw(e);
+}
+
+function draw(e) {
+    if (!isDrawing || !ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = getBrushSize();
+    ctx.strokeStyle = getBrushColor();
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+}
+
+function stopDrawing() {
+    isDrawing = false;
+    if (ctx) ctx.closePath();
+}
+
+function clearCanvas() {
+    if (ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+if (canvas) {
+    // Canvas Interaction Event Handlers
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // Automatically match layouts if screen stretches or shifts configuration variables
+    window.addEventListener('resize', initCanvasResolution);
+}
+
+// Clicking window directly raises window stack layer
+document.getElementById('intro-window')?.addEventListener('mousedown', function() { bringToFront(this); });
+document.getElementById('paint-window')?.addEventListener('mousedown', function() { bringToFront(this); });
+</script>
+</body>
+</html>
