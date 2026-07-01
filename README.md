@@ -1,1 +1,1 @@
-BEHOLD AvocadoOS! The operating system of an avocado (Idk what else to say) 
+BEHOLD AvocadoOS! The operating system of an avocado. This project tells you a little bit about me and has a tiny drawing app for you to play around with. My initials are AV and since my best friend and I have the same name, she's AK47 and I'm Avocado Avalanche. (Don't ask why. I know it's random) But that's why my OS is titled Avocado OS :) have fun! 
